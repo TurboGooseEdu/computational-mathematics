@@ -4,7 +4,7 @@ from slae.matrix import *
 class LUDecomposer:
     def __init__(self, matrix):
         self.matrix = matrix
-        self.LU, self.permutations = self.decompose_LU()
+        self.LU, self.perm_rows, self.perm_cols = self.decompose_LU()
         self.L = self.extract_L()
         self.U = self.extract_U()
         self.inverted_matrix = self.inverse_matrix()
@@ -13,21 +13,27 @@ class LUDecomposer:
         matrix = self.matrix.copy()
         if matrix.rows == matrix.cols:
             n = matrix.rows
-            permutations = []
+            perm_rows = []
+            perm_cols = []
             for i in range(n - 1):
-                # Selecting pivot by column
                 max_element = 0
-                element_col = -1
+                max_elem_row = -1
+                max_elem_col = -1
                 for j in range(i, n):
-                    elem = matrix[j][i]
-                    if elem != 0 and abs(elem) > abs(max_element):
-                        max_element = elem
-                        element_col = j
-                if element_col == -1:
+                    for k in range(i, n):
+                        elem = matrix[j][k]
+                        if elem != 0 and abs(elem) > abs(max_element):
+                            max_element = elem
+                            max_elem_row = j
+                            max_elem_col = k
+                if max_elem_row == -1 or max_elem_col == -1:
                     return None
-                if element_col != i:
-                    permutations.append((i, element_col))
-                    matrix.switch_rows(i, element_col)
+                if max_elem_row != i:
+                    matrix.switch_rows(i, max_elem_row)
+                    perm_rows.append((i, max_elem_row))
+                if max_elem_col != i:
+                    matrix.switch_cols(i, max_elem_col)
+                    perm_cols.append((i, max_elem_col))
 
                 for j in range(i + 1, n):
                     elem = matrix[j][i]
@@ -37,7 +43,7 @@ class LUDecomposer:
                         matrix[j][k] -= (matrix[i][k] * elem / matrix[i][i])
                     matrix[j][i] = elem / matrix[i][i]
 
-            return matrix, permutations
+            return matrix, perm_rows, perm_cols
 
     def extract_L(self):
         result = generate_identity_matrix(self.LU.rows)
@@ -56,31 +62,46 @@ class LUDecomposer:
         return result
 
     def det(self):
-        det = (-1) ** len(self.permutations)
+        det = (-1) ** len(self.perm_rows)
         for i in range(self.LU.rows):
             det *= self.LU[i][i]
         return det
 
-    def solve(self, b):    # b - array of numbers
-        b = [i for i in b]
+    def solve(self, b):
+        b = b.copy()
         n = self.LU.rows
-        for p in self.permutations:
-            r1, r2 = p
-            b[r1], b[r2] = b[r2], b[r1]
+        for p in self.perm_rows:
+            b.switch_rows(*p)
 
         for i in range(n - 1):
             for j in range(i + 1, n):
-                b[j] -= b[i] * self.LU[j][i]
+                b[j][0] -= b[i][0] * self.LU[j][i]
 
         for i in reversed(range(n)):
-            b[i] /= self.LU[i][i]
+            b[i][0] /= self.LU[i][i]
             for j in reversed(range(i)):
-                b[j] -= b[i] * self.LU[j][i]
+                b[j][0] -= b[i][0] * self.LU[j][i]
+
+        for p in self.perm_cols:
+            b.switch_rows(*p)
         return b
 
     def inverse_matrix(self):
         n = self.matrix.rows
-        return Matrix([self.solve([1 if i == j else 0 for j in range(n)]) for i in range(n)]).transpose()
+        solutions = []
+        for i in range(n):
+            row = []
+            for j in range(n):
+                if i == j:
+                    row.append([1])
+                else:
+                    row.append([0])
+            solutions.append(self.solve(Matrix(row)))
+        result = generate_zero_matrix(n, n)
+        for i in range(len(solutions)):
+            for j in range(n):
+                result[i][j] = solutions[i][j][0]
+        return result
 
     def condition_number(self):
         return abs(self.matrix) * abs(self.inverted_matrix)

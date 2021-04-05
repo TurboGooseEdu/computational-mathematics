@@ -11,11 +11,19 @@ def generate_identity_matrix(n):
         return Matrix([[1 if i == j else 0 for j in range(n)] for i in range(n)])
 
 
-def generate_permutation_matrix(n, permutations):
+def generate_row_permutation_matrix(n, row_perms):
     if n > 0:
         matrix = generate_identity_matrix(n)
-        for p in permutations:
+        for p in row_perms:
             matrix.switch_rows(*p)
+        return matrix
+
+
+def generate_column_permutation_matrix(n, col_perms):
+    if n > 0:
+        matrix = generate_identity_matrix(n)
+        for p in col_perms:
+            matrix.switch_cols(*p)
         return matrix
 
 
@@ -95,16 +103,14 @@ class Matrix:
         return result
 
     def transpose(self):
-        matrix = self.copy()
-        for i in range(self.rows):
-            for j in range(self.cols):
-                if i == j:
-                    break
-                matrix[i][j], matrix[j][i] = matrix[j][i], matrix[i][j]
-        return matrix
+        return Matrix([[self.matrix[j][i] for j in range(self.rows)] for i in range(self.cols)])
 
     def switch_rows(self, row1, row2):
         self.matrix[row1], self.matrix[row2] = self.matrix[row2], self.matrix[row1]
+
+    def switch_cols(self, col1, col2):
+        for i in range(self.rows):
+            self.matrix[i][col1], self.matrix[i][col2] = self.matrix[i][col2], self.matrix[i][col1]
 
     def copy(self):
         return Matrix([[self.matrix[i][j] for j in range(self.cols)] for i in range(self.rows)])
