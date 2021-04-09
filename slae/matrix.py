@@ -1,5 +1,8 @@
 from random import randint
 
+RAND_MIN = 1
+RAND_MAX = 99
+
 
 def generate_zero_matrix(rows, cols):
     if rows > 0 and cols > 0:
@@ -32,7 +35,28 @@ def generate_random_matrix(rows, cols):
         matrix = generate_zero_matrix(rows, cols)
         for i in range(rows):
             for j in range(cols):
-                matrix[i][j] = randint(1, 99)
+                matrix[i][j] = randint(RAND_MIN, RAND_MAX)
+        return matrix
+
+
+def generate_random_singular_square_matrix(n):
+    if n == 1:
+        return Matrix([[randint(RAND_MIN, RAND_MAX)]])
+
+    elif n == 2:
+        a1 = randint(RAND_MIN, RAND_MAX)
+        a2 = randint(RAND_MIN, RAND_MAX)
+        k = randint(-10, 10)
+        return Matrix([[a1, a2], [a1 * k, a2 * k]])
+
+    else:
+        matrix = generate_zero_matrix(n, n)
+        for i in range(n - 1):
+            for j in range(n):
+                matrix[i][j] = randint(RAND_MIN, RAND_MAX)
+        matrix[n - 1] = [matrix[0][i] + matrix[1][i] for i in range(n)]
+        if n > 3:
+            matrix[n - 2] = [matrix[0][i] - matrix[1][i] for i in range(n)]
         return matrix
 
 
@@ -72,16 +96,18 @@ class Matrix:
     def __getitem__(self, key):
         return self.matrix[key]
 
+    def __setitem__(self, key, value):
+        self.matrix[key] = value
+
     def __eq__(self, other):
+        EPS = 5 * 1e-14
         if self.rows != other.rows or self.cols != other.cols:
             return False
-        result = True
         for i in range(self.rows):
             for j in range(self.cols):
-                result = result and self.matrix[i][j] == self.matrix[i][j]
-                if not result:
+                if abs(self.matrix[i][j] - other.matrix[i][j]) > EPS:
                     return False
-        return result
+        return True
 
     def __abs__(self):
         max_row = 0

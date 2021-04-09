@@ -4,30 +4,32 @@ from slae.matrix import *
 class LUDecomposer:
     def __init__(self, matrix):
         self.matrix = matrix
-        self.LU, self.perm_rows, self.perm_cols = self.decompose_LU()
+        self.LU, self.perm_rows, self.perm_cols, self.rank = self.decompose_LU()
         self.L = self.extract_L()
         self.U = self.extract_U()
         self.inverted_matrix = self.inverse_matrix()
 
     def decompose_LU(self):
         matrix = self.matrix.copy()
+        EPS = abs(matrix) * 1e-15
         if matrix.rows == matrix.cols:
             n = matrix.rows
+            rank = 0
             perm_rows = []
             perm_cols = []
-            for i in range(n - 1):
+            for i in range(n):
                 max_element = 0
                 max_elem_row = -1
                 max_elem_col = -1
                 for j in range(i, n):
                     for k in range(i, n):
                         elem = matrix[j][k]
-                        if elem != 0 and abs(elem) > abs(max_element):
+                        if abs(elem) > EPS and abs(elem) > abs(max_element):
                             max_element = elem
                             max_elem_row = j
                             max_elem_col = k
                 if max_elem_row == -1 or max_elem_col == -1:
-                    return None
+                    break
                 if max_elem_row != i:
                     matrix.switch_rows(i, max_elem_row)
                     perm_rows.append((i, max_elem_row))
@@ -37,13 +39,14 @@ class LUDecomposer:
 
                 for j in range(i + 1, n):
                     elem = matrix[j][i]
-                    if elem == 0:
+                    if abs(elem) < EPS:
                         continue
                     for k in range(i, n):
                         matrix[j][k] -= (matrix[i][k] * elem / matrix[i][i])
                     matrix[j][i] = elem / matrix[i][i]
+                rank += 1
 
-            return matrix, perm_rows, perm_cols
+            return matrix, perm_rows, perm_cols, rank
 
     def extract_L(self):
         result = generate_identity_matrix(self.LU.rows)
@@ -68,6 +71,7 @@ class LUDecomposer:
         return det
 
     def solve(self, b):
+        EPS = abs(self.matrix) * 1.e-14
         b = b.copy()
         n = self.LU.rows
         for p in self.perm_rows:
@@ -77,31 +81,22 @@ class LUDecomposer:
             for j in range(i + 1, n):
                 b[j][0] -= b[i][0] * self.LU[j][i]
 
-        for i in reversed(range(n)):
-            b[i][0] /= self.LU[i][i]
-            for j in reversed(range(i)):
-                b[j][0] -= b[i][0] * self.LU[j][i]
+        if all(abs(b[i][0]) < EPS for i in range(self.rank + 1, n)):
+            for i in reversed(range(min(n, self.rank))):
+                b[i][0] /= self.LU[i][i]
+                for j in reversed(range(i)):
+                    b[j][0] -= b[i][0] * self.LU[j][i]
 
-        for p in self.perm_cols:
-            b.switch_rows(*p)
-        return b
+            return generate_column_permutation_matrix(n, self.perm_cols) * b
 
     def inverse_matrix(self):
         n = self.matrix.rows
-        solutions = []
-        for i in range(n):
-            row = []
-            for j in range(n):
-                if i == j:
-                    row.append([1])
-                else:
-                    row.append([0])
-            solutions.append(self.solve(Matrix(row)))
+        solutions = [self.solve(Matrix([[1] if i == j else [0] for j in range(n)])) for i in range(n)]
         result = generate_zero_matrix(n, n)
         for i in range(len(solutions)):
             for j in range(n):
                 result[i][j] = solutions[i][j][0]
-        return result
+        return result.transpose()
 
     def condition_number(self):
         return abs(self.matrix) * abs(self.inverted_matrix)
