@@ -4,10 +4,12 @@ from slae.matrix import *
 class LUDecomposer:
     def __init__(self, matrix):
         self.matrix = matrix
-        self.LU, self.perm_rows, self.perm_cols, self.rank = self.decompose_LU()
-        self.L = self.extract_L()
-        self.U = self.extract_U()
-        self.inverted_matrix = self.inverse_matrix()
+        if matrix.rows == matrix.cols:
+            self.LU, self.perm_rows, self.perm_cols, self.rank = self.decompose_LU()
+            self.L = self.extract_L()
+            self.U = self.extract_U()
+            if self.rank == matrix.rows:
+                self.inverted_matrix = self.inverse_matrix()
 
     def decompose_LU(self):
         matrix = self.matrix.copy()
