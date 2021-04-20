@@ -1,5 +1,6 @@
 from slae.lu_decomposer import LUDecomposer
 from slae.qr_decomposer import QRDecomposer
+from slae.jacobi_seidel import *
 from slae.matrix import *
 
 
@@ -92,7 +93,38 @@ def test_QR_decomposition():
     print()
 
 
+def test_Jacoby_and_Seidel_methods():
+    n = 3
+    LINE_SEP = "\n" + "-" * 26 * n + "\n"
+
+    A = generate_random_matrix_with_diagonal_dominance(n)
+    b = Matrix([[i + 1] for i in range(n)])
+    x, prior, posterior = solve_Seidel(*decompose_Jacobi(A, b))
+
+    print("=" * 20 + "  Jacoby and Seidel methods for matrix with diagonal dominance  " + "=" * 20, end="\n\n")
+    print("A:", A, sep="\n", end=LINE_SEP)
+    print("b", b, sep="\n")
+    print("Solution for b:", x, sep="\n", end=LINE_SEP)
+    print("Prior evaluation: ", prior, "\nPosterior evaluation: ", posterior, end=LINE_SEP)
+    print("Ax - b", A * x - b, sep="\n")
+    print("Ax - b = 0: " + str((A * x - b) == generate_zero_matrix(n, 1)), sep="\n", end=LINE_SEP)
+    print()
+
+    A = generate_random_positive_defined_symmetric_matrix(n)
+    x, evaluated, actual = solve_Seidel(*decompose_Jacobi(A, b))
+
+    print("=" * 20 + "  Jacoby and Seidel methods for positive defined symmetric matrix  " + "=" * 20, end="\n\n")
+    print("A:", A, sep="\n", end=LINE_SEP)
+    print("b", b, sep="\n")
+    print("Solution for b:", x, sep="\n", end=LINE_SEP)
+    print("Iterations: ", actual, end=LINE_SEP)
+    print("Ax - b", A * x - b, sep="\n")
+    print("Ax - b = 0: " + str((A * x - b) == generate_zero_matrix(n, 1)), sep="\n", end=LINE_SEP)
+    print()
+
+
 if __name__ == '__main__':
-    # test_LU_decomposition()
-    # test_decomposing_singular_matrix()
+    test_LU_decomposition()
+    test_decomposing_singular_matrix()
     test_QR_decomposition()
+    test_Jacoby_and_Seidel_methods()

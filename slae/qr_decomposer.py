@@ -26,7 +26,7 @@ class QRDecomposer:
                 new_Q[i][j] = sin
                 new_Q[j][i] = -sin
                 new_Q[j][j] = cos
-                Q = Q * new_Q
+                Q *= new_Q
         return Q, R
 
     def solve(self, b):

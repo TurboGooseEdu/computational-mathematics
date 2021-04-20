@@ -1,7 +1,7 @@
 from random import randint
 
 RAND_MIN = 1
-RAND_MAX = 99
+RAND_MAX = 10
 
 
 def generate_zero_matrix(rows, cols):
@@ -60,6 +60,24 @@ def generate_random_singular_square_matrix(n):
         return matrix
 
 
+def generate_random_matrix_with_diagonal_dominance(n):
+    if n > 0:
+        matrix = generate_random_matrix(n, n)
+        for i in range(n):
+            row_sum = 0
+            for j in range(n):
+                if j != i:
+                    row_sum += abs(matrix[i][j])
+            matrix[i][i] = abs(matrix[i][i]) + row_sum
+        return matrix
+
+
+def generate_random_positive_defined_symmetric_matrix(n):
+    if n > 0:
+        matrix = generate_random_matrix(n, n)
+        return matrix * matrix.transpose()
+
+
 class Matrix:
     def __init__(self, matrix):
         self.matrix = matrix
@@ -110,14 +128,7 @@ class Matrix:
         return True
 
     def __abs__(self):
-        max_row = 0
-        for i in range(self.rows):
-            row_sum = 0
-            for j in range(self.cols):
-                row_sum += abs(self.matrix[i][j])
-            if row_sum > max_row:
-                max_row = row_sum
-        return max_row
+        return max(sum(abs(self.matrix[i][j]) for j in range(self.cols)) for i in range(self.rows))
 
     def __str__(self):
         result = ""
@@ -127,6 +138,13 @@ class Matrix:
                 result += str(self.matrix[i][j]).ljust(25)
             result += "]\n"
         return result
+
+    def num_mul(self, num):
+        new_matrix = self.copy()
+        for i in range(self.rows):
+            for j in range(self.cols):
+                new_matrix[i][j] *= num
+        return new_matrix
 
     def transpose(self):
         return Matrix([[self.matrix[j][i] for j in range(self.rows)] for i in range(self.cols)])
