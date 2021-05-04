@@ -130,6 +130,9 @@ class Matrix:
     def __abs__(self):
         return max(sum(abs(self.matrix[i][j]) for j in range(self.cols)) for i in range(self.rows))
 
+    def __neg__(self):
+        return Matrix([[-self.matrix[i][j] for j in range(self.cols)] for i in range(self.rows)])
+
     def __str__(self):
         result = ""
         for i in range(self.rows):
