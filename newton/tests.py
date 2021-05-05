@@ -1,6 +1,9 @@
 from slae.matrix import *
 from newton.newton_method import newton_method
 from math import exp, sin, cos, sinh, cosh
+from time import time
+import pandas as pd
+from IPython.display import display
 
 
 def F(matrix):
@@ -48,31 +51,45 @@ def J(matrix):
 X0 = Matrix([[0.5], [0.5], [1.5], [-1], [-0.5], [1.5], [0.5], [-0.5], [1.5], [-1.5]])
 
 
-def test_case(k, m):
-    x, iterations, operations = newton_method(F, J, X0, k=k, m=m)
-    LINE_SEP = "\n" + "-" * 30 + "\n\n"
-    print("Solution x:", x, sep="\n", end=LINE_SEP)
-    print("Iterations: ", iterations, "\nOperations: ", operations, end=LINE_SEP)
-    print("F(X):", F(x), sep="\n")
-    print("F(X) = 0:", F(x) == generate_zero_matrix(10, 1), end="\n\n")
+def test_case(x0):
+    configs = [(-1, 1), (1, -1)]
+    for k in range(1, 10):
+        for m in range(1, k):
+            if (k, m) not in [(2, 1), (3, 2), (4, 2)]:  # bad cases?
+                configs.append((k, m))
+
+    data = {"k": [], "m": [], "iterations": [], "operations": [], "elapsed_time": []}
+
+    for conf in configs:
+        k, m = conf
+        start = time()
+        result = newton_method(F, J, x0, k=k, m=m)
+        elapsed_time = time() - start
+        if result is None:
+            continue
+        x, its, ops = result
+        data["k"].append(k)
+        data["m"].append(m)
+        data["iterations"].append(its)
+        data["operations"].append(ops)
+        data["elapsed_time"].append(elapsed_time)
+
+    display(pd.DataFrame(data))
 
 
-def test_ordinary_nm():
-    test_case(-1, 1)
+def test1():
+    test_case(X0)
 
 
-def test_modified_nm():
-    test_case(1, -1)
-
-
-def test_combined_nm():
-    test_case(8, 3)
+def test2():
+    X1 = X0.copy()
+    X1[4][0] = -0.2
+    test_case(X1)
 
 
 if __name__ == '__main__':
-    print("-" * 15 + "  Ordinary NM  " + "-" * 15 + "\n")
-    test_ordinary_nm()
-    print("-" * 15 + "  Modified NM  " + "-" * 15 + "\n")
-    test_modified_nm()
-    print("-" * 15 + "  Combined NM  " + "-" * 15 + "\n")
-    test_combined_nm()
+    print("-"*20 + "  Test 1  " + "-"*20)
+    test1()
+    print()
+    print("-"*20 + "  Test 2  " + "-"*20)
+    test2()
