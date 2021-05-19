@@ -12,12 +12,13 @@ from math import inf
 def newton_method(F, J, x0, k=-1, m=1, eps=1.e-15):
     iterations = 0
     operations = 0
+    m_cur = 1
     m_calc = 0
     x_cur = x0.copy()
     LU = LUDecomposer(J(x0))
     operations += LU.operations
     diff = inf
-    max_increase = 3
+    max_increase = 50
     increase_count = 0
     while diff > eps:
         solution, ops = LU.solve(-F(x_cur))
@@ -27,19 +28,19 @@ def newton_method(F, J, x0, k=-1, m=1, eps=1.e-15):
         if new_diff > diff:
             increase_count += 1
             if increase_count == max_increase:
-                return
+                raise RuntimeError("increase limit has been reached")
         else:
             diff = new_diff
             increase_count = 0
 
         m_calc += 1
-        if m_calc == m:
+        if m_calc == m_cur:
             m_calc = 0
             LU = LUDecomposer(J(x_cur))
             operations += LU.operations
 
         iterations += 1
         if iterations == k:
-            m = -1
+            m_cur = m
 
     return x_cur, iterations, operations

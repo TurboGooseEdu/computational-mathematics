@@ -54,42 +54,47 @@ X0 = Matrix([[0.5], [0.5], [1.5], [-1], [-0.5], [1.5], [0.5], [-0.5], [1.5], [-1
 def test_case(x0):
     configs = [(-1, 1), (1, -1)]
     for k in range(1, 10):
-        for m in range(1, k):
-            if (k, m) not in [(2, 1), (3, 2), (4, 2)]:  # bad cases?
-                configs.append((k, m))
+        for m in range(1, 10):
+            configs.append((k, m))
 
-    data = {"k": [], "m": [], "iterations": [], "operations": [], "elapsed_time": []}
+    data = {"k": [], "m": [], "iterations": [], "operations": [], "elapsed_time": [], "fail_reason": []}
 
     for conf in configs:
         k, m = conf
-        start = time()
-        result = newton_method(F, J, x0, k=k, m=m)
-        elapsed_time = time() - start
-        if result is None:
-            continue
-        x, its, ops = result
         data["k"].append(k)
         data["m"].append(m)
-        data["iterations"].append(its)
-        data["operations"].append(ops)
-        data["elapsed_time"].append(elapsed_time)
+        try:
+            start = time()
+            x, its, ops = newton_method(F, J, x0, k=k, m=m)
+            elapsed_time = time() - start
+            data["iterations"].append(its)
+            data["operations"].append(ops)
+            data["elapsed_time"].append(elapsed_time)
+            data["fail_reason"].append("")
+        except (RuntimeError, ValueError, OverflowError) as err:
+            data["iterations"].append(0)
+            data["operations"].append(0)
+            data["elapsed_time"].append(0)
+            data["fail_reason"].append(str(err))
 
     display(pd.DataFrame(data))
 
 
 def test1():
+    print("-" * 20 + "  Test 1  " + "-" * 20)
     test_case(X0)
+    print()
 
 
 def test2():
+    print("-"*40 + "  Test 2  " + "-"*40)
     X1 = X0.copy()
     X1[4][0] = -0.2
     test_case(X1)
+    print()
 
 
 if __name__ == '__main__':
-    print("-"*20 + "  Test 1  " + "-"*20)
+    pd.set_option('display.max_rows', 500)
     test1()
-    print()
-    print("-"*20 + "  Test 2  " + "-"*20)
     test2()
