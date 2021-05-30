@@ -53,8 +53,8 @@ X0 = Matrix([[0.5], [0.5], [1.5], [-1], [-0.5], [1.5], [0.5], [-0.5], [1.5], [-1
 
 def test_case(x0):
     configs = [(-1, 1), (1, -1)]
-    for k in range(1, 10):
-        for m in range(1, 10):
+    for k in range(1, 7):
+        for m in range(2, 7):
             configs.append((k, m))
 
     data = {"k": [], "m": [], "iterations": [], "operations": [], "elapsed_time": [], "fail_reason": []}
