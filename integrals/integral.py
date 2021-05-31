@@ -1,12 +1,14 @@
-from math import sin, cos, exp, inf, log
+from math import sin, cos, exp, inf, log, ceil
 from slae.matrix import Matrix
 from integrals.lu_decomposer import LUDecomposer
 import sympy as sp
+import pandas as pd
+from IPython.display import display
 
 a = 2.1
 b = 3.3
 alpha = 2/5
-exact_answer = 4.461512705331194112840828080521604042844
+J_exact = 4.461512705331194112840828080521604042844
 
 
 def f(x):
@@ -43,6 +45,59 @@ def M5(From, to):
     return g(to) - g(From)
 
 
+def calculate_integral_newton_kotes(eps=1.e-6):
+    integral_with_m_range(2.5, 4.5, QF_newton_kotes, eps)
+
+
+def calculate_integral_gauss(eps=1.e-6):
+    integral_with_m_range(5, 7, QF_gauss, eps)
+
+
+def integral_with_m_range(m1, m2, QF, eps=1.e-6):
+    L = 2
+    k = 1  # dividing [a, b] for k equal parts
+    S = []
+    m = inf
+    error = inf
+    k_opt_calculated = False
+    data = {"k": [], "h": [], "m": [], "S": [], "R": [], "|J_exact - S|": []}
+    while error > eps:
+        S.append(composite_QF(QF, k))
+        k *= L
+        if len(S) >= 3:
+            value = (S[-2] - S[-3]) / (S[-1] - S[-2])
+            if value > 0:
+                m = log(value, L)
+                if m1 < m < m2:
+                    error = (S[-2] - S[-1]) / (L**m - 1)
+                    if not k_opt_calculated:
+                        h_opt = (b - a) / k * (eps / abs(error)) ** (1 / m)
+                        k = ceil((b - a) / (h_opt * 0.95))
+                        k_opt_calculated = True
+                        print("k_opt = {}  (h_opt = {})".format(k, h_opt))
+        data["k"].append(k)
+        data["h"].append((b - a) / k)
+        data["m"].append(m)
+        data["S"].append(S[-1])
+        data["R"].append(error)
+        data["|J_exact - S|"].append(abs(J_exact - S[-1]))
+    result = S[-1] + error
+    display(pd.DataFrame(data))
+    print("\nJ =", result)
+    return result
+
+
+def composite_QF(QF, k):
+    h = (b - a) / k
+    result = 0
+    for i in range(k):
+        left = a + i * h
+        right = a + (i + 1) * h
+        S, R = QF(left, right)
+        result += S
+    return result
+
+
 def QF_newton_kotes(From, to):
     return IQF(From, From, (From + to) / 2, to, to)
 
@@ -77,7 +132,7 @@ def IQF(From, z1, z2, z3, to):
     A1 = coefs[0][0]
     A2 = coefs[1][0]
     A3 = coefs[2][0]
-    return A1 * f(z1) + A2 * f(z2) + A3 * f(z3)
+    return A1 * f(z1) + A2 * f(z2) + A3 * f(z3), IQF_evaluation(From, z1, z2, z3, to)
 
 
 def IQF_evaluation(From, z1, z2, z3, to):
@@ -86,49 +141,3 @@ def IQF_evaluation(From, z1, z2, z3, to):
                     (a - x) ** 2 * (3 * a - z1 - z2 - z3)) / (alpha - 3) + (a - x) ** 3 / (alpha - 4) - (
                     (a - z1) * (a - z2) * (a - z3)) / (alpha - 1))
     return 311/6 * (g(to) - g(From))
-
-
-def custom_QF(QF, k):
-    h = (b - a) / k
-    result = 0
-    for i in range(k):
-        result += QF(a + i * h, a + (i + 1) * h)
-    return result
-
-
-def calculate_integral(QF, eps=1.e-6):
-    L = 2
-    h = 1  # dividing [a, b] for h equal parts
-    S = []
-    error = inf
-    while error > eps:
-        n = len(S)
-        if n >= 3:
-            S1 = S[n - 3]
-            S2 = S[n - 2]
-            S3 = S[n - 1]
-            m = log(abs((S2 - S1) / (S3 - S2)), L)
-
-            matrix = []
-            for i in range(n):
-                tmp = [1]
-                step = (b - a) / L ** i
-                for j in range(n - 1):
-                    tmp.append(step**(m + j))
-                matrix.append(tmp)
-
-            A = Matrix(matrix)
-            B = Matrix([[i] for i in S])
-            sol = LUDecomposer(A).solve(B)
-
-            -J = sol[0][0]
-            R = 0
-            for i in range(1, n):
-                R += sol[i][0] * ((b - a) / L ** (i - 1)) ** (m + i - 1)
-
-            error = R
-
-        S.append(custom_QF(QF, h))
-        h *= L
-
-    return S[-1]
