@@ -63,27 +63,32 @@ def integral_with_m_range(m1, m2, QF, eps=1.e-6):
     data = {"k": [], "h": [], "m": [], "S": [], "R": [], "|J_exact - S|": []}
     while error > eps:
         S.append(composite_QF(QF, k))
-        k *= L
         if len(S) >= 3:
             value = (S[-2] - S[-3]) / (S[-1] - S[-2])
             if value > 0:
                 m = log(value, L)
                 if m1 < m < m2:
-                    error = (S[-2] - S[-1]) / (L**m - 1)
+                    error = (S[-1] - S[-2]) / (L**m - 1)
                     if not k_opt_calculated:
                         h_opt = (b - a) / k * (eps / abs(error)) ** (1 / m)
-                        k = ceil((b - a) / (h_opt * 0.95))
+                        k_opt = ceil((b - a) / (h_opt * 0.95))
                         k_opt_calculated = True
-                        print("k_opt = {}  (h_opt = {})".format(k, h_opt))
+                        if k_opt > k:
+                            k = k_opt
+                        print("k_opt = {}  (h_opt = {})".format(k_opt, h_opt))
         data["k"].append(k)
         data["h"].append((b - a) / k)
         data["m"].append(m)
         data["S"].append(S[-1])
         data["R"].append(error)
         data["|J_exact - S|"].append(abs(J_exact - S[-1]))
+        k *= L
+
     result = S[-1] + error
     display(pd.DataFrame(data))
-    print("\nJ =", result)
+    print("\nJ       =", result)
+    print("J_exact =", J_exact)
+    print("|J - J_exact| =", abs(result - J_exact))
     return result
 
 
