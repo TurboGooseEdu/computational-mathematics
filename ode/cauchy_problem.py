@@ -52,12 +52,6 @@ def solve_constant_step(start, stop, h, method):
     return x_values, Y_values
 
 
-def eval_error_by_Runge(Yn, Y2n, method):
-    p = method.precision
-    R2n = (Y2n - Yn) / (2**p - 1)
-    return R2n
-
-
 def solve_auto_step(start, stop, method, tol=1.e-6):
     h = 0.02
     factor = 0.9
@@ -84,3 +78,9 @@ def solve_auto_step(start, stop, method, tol=1.e-6):
             x_discarded.append(x_cur)
         h = min(stop - x_cur, h * max(facmin, min(facmax, factor * (tol / R2n_norm)**(1/p))))
     return x_values, Y_values, x_discarded
+
+
+def eval_error_by_Runge(Yn, Y2n, method):
+    p = method.precision
+    R2n = (Y2n - Yn) / (2**p - 1)
+    return R2n

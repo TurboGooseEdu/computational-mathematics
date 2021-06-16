@@ -23,6 +23,8 @@ def render_plot_with_numerical_and_exact_solutions(x_values, Y_values):
     plt.plot(x_values, y_values_exact[3], "y")
     plt.plot(x_values, y_values_num[3], "y--")
     plt.legend(["exact solution", "numerical solution"])
+    plt.xlabel("x")
+    plt.ylabel("y")
     plt.grid()
     plt.show()
 
@@ -63,6 +65,7 @@ def render_plot_with_h_of_x_dependency(x_values, x_discarded):
     plt.plot(x_values[:-1], h_values)
     plt.plot(x_accepted, h_accepted, "ro")
     plt.plot(x_discarded, h_discarded, "bx")
+    plt.legend(["curve", "accepted", "discarded"])
     plt.title("h(x)")
     plt.xlabel("x")
     plt.ylabel("h")
@@ -101,11 +104,6 @@ def test12():
     render_plot_with_error_of_x_dependency(x_values, Y_values)
 
 
-def test1():
-    test11()
-    test12()
-
-
 def test21(x_values, Y_values):
     render_plot_with_numerical_and_exact_solutions(x_values, Y_values)
 
@@ -127,8 +125,6 @@ def test24():
         tol_values.append(tol)
         f_calculation_count.append(3 * p * len(solve_auto_step(x_start, x_fin, considered_method, tol)[0]))
         tol /= 10
-
-    print(len(tol_values), len(f_calculation_count))
     plt.title("f_calculations(tol)")
     plt.plot(tol_values, f_calculation_count)
     plt.semilogy(base=2)
@@ -137,6 +133,11 @@ def test24():
     plt.ylabel("f_calculations")
     plt.grid()
     plt.show()
+
+
+def test1():
+    test11()
+    test12()
 
 
 def test2():
