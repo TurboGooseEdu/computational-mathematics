@@ -58,9 +58,8 @@ def eval_error_by_Runge(Yn, Y2n, method):
     return R2n
 
 
-def solve_auto_step(start, stop, method):
+def solve_auto_step(start, stop, method, tol=1.e-6):
     h = 0.02
-    tol = 1.e-6
     factor = 0.9
     facmin = 0.3
     facmax = 3
