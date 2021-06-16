@@ -39,16 +39,17 @@ def F(x, y):
 
 def solve_constant_step(start, stop, h, method):
     Y = Y0
-    x_values = []
+    x = start
+    x_values = [x]
     Y_values = [Y]
-    for x in np.arange(start, stop, h):
+    while x + h < stop:
         Y = method.calculate(F, h, x, Y)
+        x += h
         x_values.append(x)
         Y_values.append(Y)
-    if x_values[-1] < stop:
+    if x < stop:
         x_values.append(stop)
-    else:
-        del Y_values[-1]
+        Y_values.append(method.calculate(F, stop - x, x, Y))
     return x_values, Y_values
 
 

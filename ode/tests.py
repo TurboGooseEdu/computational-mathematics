@@ -73,6 +73,10 @@ def render_plot_with_h_of_x_dependency(x_values, x_discarded):
     plt.show()
 
 
+def test10():
+    render_plot_with_numerical_and_exact_solutions(*solve_constant_step(x_start, x_fin, 0.01, considered_method))
+
+
 def test11():
     h = 0.01
     h_values = []
@@ -136,6 +140,7 @@ def test24():
 
 
 def test1():
+    test10()
     test11()
     test12()
 
