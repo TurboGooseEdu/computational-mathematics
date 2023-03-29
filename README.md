@@ -1,2 +1,2 @@
-# ComputationalMathematics
-Assignments for computational mathematics course
+# computational-mathematics
+Assignments for computational mathematics university course
